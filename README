@@ -1,0 +1,52 @@
+Lucas Lopilato
+CS176B Project 2
+
+
+/********************************************************/
+Thank you to the TAs who made this project happen, I can't
+image how difficult it is to get a consistent server to behave for a large class in such short time.
+
+mptcp [ -n num_interfaces ] [ -h hostname ] [ -p port ] [-f filename ]
+        
+        [ -n ] : number of connections ( paths ) you would like to have with the server
+        [ -h ] : hostname of the server where to connect
+        [ -p ] : port number on the server where to start the initial connection
+        [ -f ] : name of the file to transfer to the server
+        [ -v ] : print packets sent and received
+
+For my project I create 2 threads per socket. One sending, one receiving.
+In the beginning I query the server for ports and parse 
+the response. Then I build the file into a queue with 
+proper sequence numbers. After the queue is built, each
+packet only has the data to send, the MSS, and the sequence number. 
+
+From there I spawn 2 * number of connections worth of threads. 
+If verbose is disabled, I suppress stderr since libmptcp throws an error if a connection times out.
+
+Each sending thread will send a packet one at a time then queue the server for a new one.
+When a thread claims a packet, it fills in sender and receiver information for the packet.
+At this point, the packet has all the information it needs.
+After each packet is sent, a sender will start a timer and see if the last packet sent has been lost. 
+If so, it will relinquish control of the packet, so another channel or itself can try to resend it.
+
+Each receiving thread monitors a specific connection for any ACKS. If the ack is illegitimate (improper ack number), the receiving thread will disown the packet in the queue so it will be resent. If three of the same ACK is received, the packet will also be disowned and resent.
+Triple duplicate ACKs also halve the sending window.
+If a new ACK is received, the sending window is increased by one.
+
+
+/*****************************************************/
+				File Descriptions
+/*****************************************************/
+
+client     - Main point of entry, parses arguments,
+             Handles control flow, builds queue
+connection - Helpers for connection handling, address 
+             creation, parsing packets
+queue      - Data Structure handling most TCP functions
+             Implements sliding window, ACKing, and packets
+threads    - Handles thread creation, cleanup and the
+             main meat of sending and receiving threads
+utility    - Contains a few debugging functions to print
+             and neatly format data structures.
+
+
