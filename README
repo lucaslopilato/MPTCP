@@ -3,8 +3,6 @@ CS176B Project 2
 
 
 /********************************************************/
-Thank you to the TAs who made this project happen, I can't
-image how difficult it is to get a consistent server to behave for a large class in such short time.
 
 mptcp [ -n num_interfaces ] [ -h hostname ] [ -p port ] [-f filename ]
         
